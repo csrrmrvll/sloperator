@@ -114,6 +114,67 @@ hallucinate(n)✨"""
     assert run(source) == "105\n1\n"
 
 
+def test_loadbearing_declares_an_immutable_binding():
+    assert run("loadbearing MAX = 3✨\nhallucinate(MAX)✨") == "3\n"
+
+
+def test_assignment_to_loadbearing_is_a_runtime_error():
+    assert fails("loadbearing MAX = 3✨\nMAX = 4✨") == (
+        "SlopLang runtime error at line 2: cannot assign to loadbearing 'MAX'"
+    )
+
+
+def test_nested_assignment_to_loadbearing_is_a_runtime_error():
+    source = """loadbearing MAX = 3✨
+{
+    MAX = 4✨
+}
+"""
+    assert fails(source) == ("SlopLang runtime error at line 3: cannot assign to loadbearing 'MAX'")
+
+
+def test_unexecuted_assignment_to_loadbearing_does_not_fail():
+    source = """loadbearing MAX = 3✨
+vibe ❌ {
+    MAX = 4✨
+}
+hallucinate(MAX)✨"""
+    assert run(source) == "3\n"
+
+
+def test_inner_scope_may_shadow_a_loadbearing_binding():
+    source = """loadbearing MAX = 3✨
+{
+    slop MAX = 10✨
+    MAX = 11✨
+    hallucinate(MAX)✨
+}
+{
+    loadbearing MAX = 20✨
+    hallucinate(MAX)✨
+}
+hallucinate(MAX)✨"""
+    assert run(source) == "11\n20\n3\n"
+
+
+@pytest.mark.parametrize("second", ["slop MAX = 4✨", "loadbearing MAX = 4✨"])
+def test_loadbearing_cannot_be_redeclared_in_the_same_scope(second: str):
+    assert fails(f"loadbearing MAX = 3✨\n{second}") == (
+        "SlopLang runtime error at line 2: 'MAX' is already declared in this scope"
+    )
+
+
+def test_parameters_may_shadow_a_loadbearing_binding():
+    source = """loadbearing MAX = 3✨
+clanker bump(MAX) {
+    MAX = MAX + 1✨
+    ship MAX✨
+}
+hallucinate(bump(9))✨
+hallucinate(MAX)✨"""
+    assert run(source) == "10\n3\n"
+
+
 def test_ship_unwinds_nested_blocks_and_loops():
     source = """clanker find() {
     slop i = 0✨
