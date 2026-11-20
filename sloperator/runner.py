@@ -7,6 +7,7 @@ from sloperator.errors import SlopError
 from sloperator.evaluator import Interpreter
 from sloperator.lexer import tokenize
 from sloperator.parser import parse
+from sloperator.parser.ast import Program
 
 PYTHON_RECURSION_LIMIT = 20_000
 
@@ -19,15 +20,31 @@ class RunResult:
 
 
 def run_program(source: str, out: TextIO) -> SlopError | None:
-    if sys.getrecursionlimit() < PYTHON_RECURSION_LIMIT:
-        sys.setrecursionlimit(PYTHON_RECURSION_LIMIT)
+    ensure_recursion_limit()
     try:
-        tokens = tokenize(source)
-        program = parse(tokens)
+        program = parse_source(source)
         Interpreter(out).run(program)
     except SlopError as error:
         return error
     return None
+
+
+def check_source(source: str) -> SlopError | None:
+    ensure_recursion_limit()
+    try:
+        parse_source(source)
+    except SlopError as error:
+        return error
+    return None
+
+
+def parse_source(source: str) -> Program:
+    return parse(tokenize(source))
+
+
+def ensure_recursion_limit() -> None:
+    if sys.getrecursionlimit() < PYTHON_RECURSION_LIMIT:
+        sys.setrecursionlimit(PYTHON_RECURSION_LIMIT)
 
 
 def run_source(source: str) -> RunResult:
