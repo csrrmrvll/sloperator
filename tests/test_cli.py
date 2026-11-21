@@ -29,6 +29,16 @@ def test_error_goes_to_stderr_after_earlier_output(tmp_path: Path):
     assert "Traceback" not in completed.stderr
 
 
+def test_division_by_zero_is_a_clean_runtime_error(tmp_path: Path):
+    program = tmp_path / "divzero.slop"
+    program.write_text("hallucinate(1 / 0)✨\n", encoding="utf-8")
+    completed = run_cli(str(program))
+    assert completed.returncode == 1
+    assert completed.stdout == ""
+    assert completed.stderr == "SlopLang runtime error at line 1: division by zero\n"
+    assert "Traceback" not in completed.stderr
+
+
 def test_missing_file_and_usage():
     usage = run_cli()
     assert usage.returncode == 2

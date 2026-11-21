@@ -1,7 +1,14 @@
 import sys
 from pathlib import Path
 
-from sloperator.runner import check_source, run_program
+if sys.version_info < (3, 13):  # noqa: UP036 - friendly error on unsupported Python
+    print(
+        "sloperator requires Python 3.13 or newer; run it with 'uv run sloperator.py'",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+
+from sloperator.runner import check_source, run_program  # noqa: E402
 
 USAGE = "usage: uv run sloperator.py [--check] <file.slop>"
 
