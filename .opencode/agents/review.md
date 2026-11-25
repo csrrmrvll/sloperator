@@ -1,6 +1,7 @@
 ---
 description: Reviews Sloperator for bugs and missing regression coverage
 mode: primary
+steps: 2
 permissions:
   - action: "*"
     resource: "*"
